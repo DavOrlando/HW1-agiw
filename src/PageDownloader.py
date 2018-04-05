@@ -7,6 +7,7 @@ import src.FileManager as fileman
 import concurrent.futures
 import requests
 import asyncio
+import os
 
 class PageDownloader(object):
     '''
@@ -42,9 +43,11 @@ class PageDownloader(object):
 
     async def startAsyncDownload(self, loop,category,dominio2URLS):
         self.prepareFolder("../"+category)
-        with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
+        with concurrent.futures.ThreadPoolExecutor(max_workers=3) as executor:
             for dominio in dominio2URLS.keys():
                 destinationFolder = self.OUTPUT_FOLDER + "/" + dominio
+                if(os.path.exists(destinationFolder)==True):
+                    continue;
                 self.fm.makeDir(destinationFolder)
                 fileDominio = open(destinationFolder+"/index.txt","w")
                 urls = dominio2URLS[dominio]
