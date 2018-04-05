@@ -7,16 +7,14 @@ Created on 05 apr 2018
 import src.FileParser as filepars
 import src.PageDownloader as pagedown
 import asyncio
+import concurrent.futures
 
 if __name__ == '__main__':
-    loop=asyncio.get_event_loop()
-    
     parser = filepars.FileParser()
     pageDownloader = pagedown.PageDownloader();
     pageDownloader.prepareFolder("../monitor")
     #Creazione mappa dominio e lista URL di quel dominio
     dominio2URLS = parser.getDominio2UrlsFromJSONFile("../resources/urls.json")
-    loop
     for dominio in dominio2URLS.keys():
-        loop.run_until_complete(pageDownloader.downloadPages(dominio, dominio2URLS[dominio]))
+        pageDownloader.downloadPages(dominio, dominio2URLS[dominio])
     
