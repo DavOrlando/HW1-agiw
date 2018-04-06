@@ -8,6 +8,7 @@ import concurrent.futures
 import requests
 import asyncio
 import os
+import shutil
 
 class PageDownloader(object):
     '''
@@ -25,7 +26,7 @@ class PageDownloader(object):
 
     def refreshIndexWithSuccess(self, fileDominio, progressivo, response):
         fileDominio.write(response.url + "\t" + "./" + str(progressivo) + ".html\n")
-        print("Scaricato: \n" + response.url + " dentro " + "./" + str(progressivo) + ".html\n")
+        print("Scaricato:" + response.url + " dentro " + "./" + str(progressivo) + ".html")
 
     def saveHtmlTo(self, destinationFolder, progressivo, response):
         fileForUrlSelected = open(destinationFolder + "/" + str(progressivo) + ".html", "w", encoding="utf8")
@@ -43,7 +44,7 @@ class PageDownloader(object):
 
     async def startAsyncDownload(self, loop,category,dominio2URLS):
         self.prepareFolder("../"+category)
-        with concurrent.futures.ThreadPoolExecutor(max_workers=3) as executor:
+        with concurrent.futures.ThreadPoolExecutor(max_workers=150) as executor:
             for dominio in dominio2URLS.keys():
                 destinationFolder = self.OUTPUT_FOLDER + "/" + dominio
                 if(os.path.exists(destinationFolder)==True):
@@ -60,20 +61,24 @@ class PageDownloader(object):
                     for i in range(0,len(urls))
                 ]
                 progressivo = 1;
-                
-                
-                for response in await asyncio.gather(*futures):
-                    if(str(response.status_code)[0] == "2" and response.url in urls):
-                        self.saveHtmlTo(destinationFolder, progressivo, response)
-                        self.refreshIndexWithSuccess(fileDominio, progressivo, response)
-                        progressivo+=1;
-                    else:
-                        if(str(response.status_code)[0] == "4"):
-                            self.refreshIndexWithErrorCode(fileDominio, response)
-                        else: 
-                            self.refreshIndexWithRedirectError(fileDominio, response)
-                fileDominio.close()
-    
+                    
+                try:
+                    for response in await asyncio.gather(*futures):
+                        if(str(response.status_code)[0] == "2"):
+                            self.saveHtmlTo(destinationFolder, progressivo, response)
+                            self.refreshIndexWithSuccess(fileDominio, progressivo, response)
+                            progressivo+=1;
+                        else:
+                            if(str(response.status_code)[0] == "4"):
+                                self.refreshIndexWithErrorCode(fileDominio, response)
+                            else: 
+                                self.refreshIndexWithRedirectError(fileDominio, response)
+                    fileDominio.close()
+                except:
+                    fileDominio.close()
+                    shutil.rmtree(destinationFolder);
+                    print("Eccezione di connessione")
+                    
     
     def prepareFolder(self, path):
         self.OUTPUT_FOLDER = path;

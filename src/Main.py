@@ -15,6 +15,6 @@ if __name__ == '__main__':
     pageDownloader=pagedown.PageDownloader()
     parser = filepars.FileParser()
     dominio2URLS = parser.getDominio2UrlsFromJSONFile("../resources/urls.json")
-    
+    print(len(dominio2URLS.keys()))
     loop.run_until_complete(pageDownloader.startAsyncDownload(loop,"monitor",dominio2URLS))
 
