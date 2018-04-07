@@ -9,7 +9,8 @@ import requests
 import asyncio
 import os
 import shutil
-
+import json
+from src.FileParser import FileParser
 class PageDownloader(object):
     '''
     classdocs
@@ -43,6 +44,9 @@ class PageDownloader(object):
         print(response.url + "\t redirect")
 
     async def startAsyncDownload(self, loop,category,dominio2URLS):
+        dominiConTimeout= FileParser().getDictFromJSONFile("../monitor/listaTimeout.json")
+        def doReq(url):
+            return requests.get(url,timeout=10)
         self.prepareFolder("../"+category)
         with concurrent.futures.ThreadPoolExecutor(max_workers=150) as executor:
             for dominio in dominio2URLS.keys():
@@ -51,11 +55,11 @@ class PageDownloader(object):
                     continue;
                 self.fm.makeDir(destinationFolder)
                 fileDominio = open(destinationFolder+"/index.txt","w")
-                urls = dominio2URLS[dominio]
+                urls = dominio2URLS[dominio]       
                 futures = [
                     loop.run_in_executor(
                         executor, 
-                        requests.get, 
+                        doReq, 
                         urls[i]
                     )
                     for i in range(0,len(urls))
@@ -74,10 +78,17 @@ class PageDownloader(object):
                             else: 
                                 self.refreshIndexWithRedirectError(fileDominio, response)
                     fileDominio.close()
+                except requests.exceptions.Timeout:
+                    fileDominio.close()
+                    dominiConTimeout[dominio]=dominio2URLS[dominio]
+                    with open("../monitor/listaTimeout.json", 'w') as outfile:
+                        json.dump(dominiConTimeout, outfile)
+                    shutil.rmtree(destinationFolder);
+                    print("Eccezione di timeout")
                 except:
                     fileDominio.close()
                     shutil.rmtree(destinationFolder);
-                    print("Eccezione di connessione")
+                    print("Eccezione di connessione")   
                     
     
     def prepareFolder(self, path):

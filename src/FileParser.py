@@ -17,9 +17,13 @@ class FileParser(object):
         Constructor
         '''
     
-    def getDominio2UrlsFromJSONFile(self, path):
-        fileURL = open(path, "r")
-        domain2listUrl = json.loads(fileURL.read())
-        print("Mappa dominio e lista URL di quel dominio creata correttamente")
-        fileURL.close()
-        return domain2listUrl    
+    def getDictFromJSONFile(self, path):
+        domain2listUrl = {}
+        try:
+            fileURL = open(path, "r")
+            domain2listUrl = json.loads(fileURL.read())
+            print("Mappa dominio e lista URL di quel dominio creata correttamente")
+            fileURL.close()
+            return domain2listUrl
+        except:
+            return domain2listUrl    
